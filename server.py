@@ -35,6 +35,7 @@ def createFile(filename, filesize):
 	
 	f.close()
 	ACK=('OK')
+	print('recived-completed')
 	client.send(ACK.encode('ascii'))
 	client.close()
 	server.close()
@@ -63,6 +64,6 @@ while True:
 	request = client.recv(BUFFER_SIZE).decode('ascii')
 	options =  request.split(',')
 	print('received desde IP: '+ str(addr[0]) + ' port: ' + str(addr[1]))
-	print(options)
+	print("OPTIONS_LOG: " + options)
 	checkStatus(options)
 
