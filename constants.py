@@ -4,7 +4,7 @@ Created by: Daniel Garcia Garcia, Sebastian
 """
 
 SERVER_ADDRESS = "127.0.0.1"
-PORT = 1234
+PORT = 8050
 BACKLOG = 5
 BUFFER_SIZE = 1024 
 ENCODING_FORMAT = "utf-8"

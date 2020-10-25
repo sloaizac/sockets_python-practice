@@ -2,68 +2,101 @@
 
 
 import socket
-#import tqdm
 import os
+import constants
+import shutil
 	
 
 def checkStatus(options):
-	
-	if options[0] == 'NEW':
+	if options[0] == constants.NEW_BUCKET:
+		createBucket(options[1])
+	elif options[0] == constants.UPLOAD_FILE:
 		createFile(options[1], options[2])
-	elif options[0] == 'LIST':
-		getFileList()
-		
+	elif options[0] == constants.LIST_FILE:
+		getFileList(options[1])
+	elif options[0] == constants.DELETE_FILE:
+		deleteFile(options[1], options[2])
+	elif options[0] == constants.DOWNLOAD_FILE:
+		downloadFile(options[1], options[2])
+	elif options[0] == constants.DELETE_BUCKET:
+		deleteBucket(options[1])
+	elif options[0] == constants.LIST_BUCKET or options[0] == constants.HELLO:
+		getBucketList()
 
-
-def createFile(filename, filesize):
-	
-	ACK=('ACK')
-	client.send(ACK.encode('ascii'))
-	
-	filename = os.path.basename(filename)
-	filesize = int(filesize)
-	#progress = tqdm.tqdm(range(filesize), f"Receiving {filename}", unit="B", unit_scale=True, unit_divisor=1024)
-	
-	f =  open(os.getcwd() + '/test_db/' + filename, "wb")
+def downloadFile(filename, bucketName):
+	f = open(os.path.join(test_db, bucketName, filename), "rb")
 	while True:
-		bytes_read = client.recv(BUFFER_SIZE)
-		if not bytes_read:    
+		bytes_read = f.read(constants.BUFFER_SIZE)
+
+		if not bytes_read:
+			print('vacio')
+			break
+		print('send')
+		client.sendall(bytes_read)
+	client.send('EOF'.encode('ascii'))
+	while True:
+		response = client.recv(constants.BUFFER_SIZE)
+		if response.decode('ascii') == 'OK':
+			break
+
+def deleteFile(filename, bucketName):
+	os.remove(os.path.join(test_db, bucketName, filename))
+	client.send('file deleted successfully'.encode('ascii'))
+
+def deleteBucket(bucketName):
+	shutil.rmtree(os.path.join(test_db, bucketName))
+	client.send('bucket deleted successfully'.encode('ascii'))
+
+def createFile(filename, bucketName):
+	client.send('ACK'.encode('ascii'))
+	f = open(os.path.join(test_db, bucketName, filename), "wb")
+	while True:
+		bytes_read = client.recv(constants.BUFFER_SIZE)
+		if bytes_read.decode('ascii') == 'EOF':
+			print('vacio')
 			break
 		print('recived bites')
 		f.write(bytes_read)
-		#progress.update(len(bytes_read))
-	
 	f.close()
-	ACK=('OK')
 	print('recived-completed')
-	client.send(ACK.encode('ascii'))
-	client.close()
-	server.close()
+	client.send('OK'.encode('ascii'))
 	
-def getFileList():
-	
-	fileList = os.listdir(os.getcwd() + '/test')
-	strList = ','.join([str(e) for e in fileList])
+def getFileList(bucketName):
+	fileList = os.listdir(os.path.join(test_db, bucketName))
+	strList = '\n * '.join([str(e) for e in fileList])
+	client.send(strList.encode('ascii'))
+
+def getBucketList():
+	fileList = os.listdir(test_db)
+	strList = '\n * '.join([str(e) for e in fileList])
+	client.send(strList.encode('ascii'))
+
+def createBucket(bucketName):
+	newBucket = os.path.join(test_db, bucketName)
+	if not os.path.exists(newBucket):
+		os.makedirs(newBucket)
+		client.send('new bucket created'.encode('ascii'))
+	else:
+		client.send('bucket name already exist'.encode('ascii'))
 
 	
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-BUFFER_SIZE = 1024
 
-server.bind(('127.0.0.1', 8050))
+server.bind((constants.SERVER_ADDRESS, constants.PORT))
 
-#Aceptamos conexiones entrantes con el metodo listen. Por parámetro las conexiones simutáneas.
 server.listen(1)
 
-#Instanciamos un objeto cli (socket cliente) para recibir datos
 client, addr = server.accept()
 
-while True:
+test_db = os.path.join(os.getcwd(), 'test_db')
+if not os.path.exists(test_db):
+	os.makedirs(test_db)
 
-#Recibimos el mensaje, con el metodo recv recibimos datos. Por parametro la cantidad de bytes para recibir
-	request = client.recv(BUFFER_SIZE).decode('ascii')
-	options =  request.split(',')
-	print('received desde IP: '+ str(addr[0]) + ' port: ' + str(addr[1]))
-	print("OPTIONS_LOG: " + options)
+while True:
+	request = client.recv(constants.BUFFER_SIZE).decode('ascii')
+	options = request.split(',')
+	print('received from IP: ' + str(addr[0]) + ' port: ' + str(addr[1]))
+	print("OPTIONS_LOG: " + str(options))
 	checkStatus(options)
 
