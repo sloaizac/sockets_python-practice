@@ -4,7 +4,7 @@
 import socket
 import os
 import constants
-import ast
+
 #Variables for connection
 host = constants.SERVER_ADDRESS 
 port = constants.PORT
