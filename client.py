@@ -1,5 +1,8 @@
 #Client code
-
+"""
+October 24, 2020
+Created by: Daniel Garcia Garcia, Sebastian Loaiza Correa
+"""
 #Import socket library
 import socket
 import constants
