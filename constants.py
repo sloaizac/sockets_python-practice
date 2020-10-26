@@ -1,6 +1,6 @@
 """
 October 24, 2020
-Created by: Daniel Garcia Garcia, Sebastian
+Created by: Daniel Garcia Garcia, Sebastian Loaiza Correa
 """
 
 SERVER_ADDRESS = "127.0.0.1"
