@@ -43,9 +43,7 @@ def runClientSocket():
                     f = open(filePath, "rb")
                     while True:
                         bytes_read = f.read(constants.BUFFER_SIZE)
-
                         if not bytes_read:
-                            print('vacio')
                             break
                         print('send')
                         clientSocket.sendall(bytes_read)
@@ -54,6 +52,9 @@ def runClientSocket():
                         response = clientSocket.recv(constants.BUFFER_SIZE)
                         if response.decode('ascii') == 'OK':
                             break
+                    break
+                else:
+                    print('Filename already exist')
                     break
             continue
         elif command == constants.LIST_FILE:
@@ -67,12 +68,11 @@ def runClientSocket():
             while True:
                 bytes_read = clientSocket.recv(constants.BUFFER_SIZE)
                 if bytes_read.decode('ascii') == 'EOF':
-                    print('vacio')
                     break
-                print('recived bites')
+                print('received bites')
                 f.write(bytes_read)
             f.close()
-            print('recived complete')
+            print('received complete')
             clientSocket.send('OK'.encode('ascii'))
             continue
         elif(command == constants.DELETE_FILE):

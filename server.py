@@ -5,6 +5,14 @@ import socket
 import os
 import constants
 import shutil
+import sys
+
+def init():
+	while True:
+		request = client.recv(constants.BUFFER_SIZE).decode('ascii')
+		options = request.split(',')
+		print('received from IP: ' + str(addr[0]) + ' port: ' + str(addr[1]))
+		checkStatus(options)
 	
 
 def checkStatus(options):
@@ -29,7 +37,6 @@ def downloadFile(filename, bucketName):
 		bytes_read = f.read(constants.BUFFER_SIZE)
 
 		if not bytes_read:
-			print('vacio')
 			break
 		print('send')
 		client.sendall(bytes_read)
@@ -48,27 +55,29 @@ def deleteBucket(bucketName):
 	client.send('bucket deleted successfully'.encode('ascii'))
 
 def createFile(filename, bucketName):
-	client.send('ACK'.encode('ascii'))
-	f = open(os.path.join(test_db, bucketName, filename), "wb")
-	while True:
-		bytes_read = client.recv(constants.BUFFER_SIZE)
-		if bytes_read.decode('ascii') == 'EOF':
-			print('vacio')
-			break
-		print('recived bites')
-		f.write(bytes_read)
-	f.close()
-	print('recived-completed')
-	client.send('OK'.encode('ascii'))
+	if os.path.exists(os.path.join(test_db, bucketName, filename)):
+		client.send('EXIST'.encode('ascii'))
+	else:
+		client.send('ACK'.encode('ascii'))
+		f = open(os.path.join(test_db, bucketName, filename), "wb")
+		while True:
+			bytes_read = client.recv(constants.BUFFER_SIZE)
+			if bytes_read.decode('ascii') == 'EOF':
+				break
+			print('received bites')
+			f.write(bytes_read)
+		f.close()
+		print('received-completed')
+		client.send('OK'.encode('ascii'))
 	
 def getFileList(bucketName):
 	fileList = os.listdir(os.path.join(test_db, bucketName))
-	strList = '\n * '.join([str(e) for e in fileList])
+	strList = '\n'.join([str(e) for e in fileList])
 	client.send(strList.encode('ascii'))
 
 def getBucketList():
 	fileList = os.listdir(test_db)
-	strList = '\n * '.join([str(e) for e in fileList])
+	strList = '\n'.join([str(e) for e in fileList])
 	client.send(strList.encode('ascii'))
 
 def createBucket(bucketName):
@@ -77,7 +86,7 @@ def createBucket(bucketName):
 		os.makedirs(newBucket)
 		client.send('new bucket created'.encode('ascii'))
 	else:
-		client.send('bucket name already exist'.encode('ascii'))
+		client.send('Bucket name already exist'.encode('ascii'))
 
 	
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -85,18 +94,17 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 server.bind((constants.SERVER_ADDRESS, constants.PORT))
 
-server.listen(1)
+server.listen(10)
 
-client, addr = server.accept()
+try:
+	test_db = sys.argv[1]
+except:
+	test_db = input("Enter buckets path >> ")
 
-test_db = os.path.join(os.getcwd(), 'test_db')
 if not os.path.exists(test_db):
 	os.makedirs(test_db)
 
-while True:
-	request = client.recv(constants.BUFFER_SIZE).decode('ascii')
-	options = request.split(',')
-	print('received from IP: ' + str(addr[0]) + ' port: ' + str(addr[1]))
-	print("OPTIONS_LOG: " + str(options))
-	checkStatus(options)
+client, addr = server.accept()
+
+init()
 
