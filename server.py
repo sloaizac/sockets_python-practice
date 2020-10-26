@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+October 24, 2020
+Created by: Daniel Garcia Garcia, Sebastian Loaiza Correa
+"""
 
 
 import socket
