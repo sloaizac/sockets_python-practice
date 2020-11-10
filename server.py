@@ -10,12 +10,13 @@ import os
 import constants
 import shutil
 import sys
+from _thread import *
 
-def init():
+
+def handleConecction(client):
 	while True:
 		request = client.recv(constants.BUFFER_SIZE).decode('ascii')
 		options = request.split(',')
-		print('received from IP: ' + str(addr[0]) + ' port: ' + str(addr[1]))
 		checkStatus(options)
 	
 
@@ -102,6 +103,8 @@ server.bind((constants.SERVER_ADDRESS, constants.PORT))
 
 server.listen(5)
 
+threadCount = 0
+
 try:
 	test_db = sys.argv[1]
 except:
@@ -110,7 +113,12 @@ except:
 if not os.path.exists(test_db):
 	os.makedirs(test_db)
 
-client, addr = server.accept()
+	
+while True:
+    client, address = server.accept()
+    print('Connected to: ' + address[0] + ':' + str(address[1]))
+    start_new_thread(handleConecction, (client, ))
+    threadCount += 1
+    print('Thread Number: ' + str(threadCount))
 
-init()
 
