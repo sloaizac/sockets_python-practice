@@ -47,6 +47,7 @@ def runClientSocket():
                     while True:
                         bytes_read = f.read(constants.BUFFER_SIZE)
                         if not bytes_read:
+                            print('terminado')
                             break
                         print('send')
                         clientSocket.sendall(bytes_read)
@@ -67,10 +68,12 @@ def runClientSocket():
             fileName = input("Enter the name of the file to download >> ")
             bucketName = input("Enter the bucket name to download the file >> ")
             clientSocket.send((command+','+fileName+','+bucketName).encode('ascii'))
-            f = open(os.path.basename(fileName), "wb")
+            f = open(os.path.join(os.getcwd(), fileName), "wb")
             while True:
                 bytes_read = clientSocket.recv(constants.BUFFER_SIZE)
-                if bytes_read.decode('ascii') == 'EOF':
+                if bytes_read.decode('ascii')[-3:] == "EOF":
+                    f.write(bytes_read.decode('ascii')[:-3].encode('ascii'))
+                    print('terminado')
                     break
                 print('received bites')
                 f.write(bytes_read)

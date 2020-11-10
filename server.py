@@ -66,7 +66,9 @@ def createFile(filename, bucketName):
 		f = open(os.path.join(test_db, bucketName, filename), "wb")
 		while True:
 			bytes_read = client.recv(constants.BUFFER_SIZE)
-			if bytes_read.decode('ascii') == 'EOF':
+			if bytes_read.decode('ascii')[-3:] == "EOF":
+				f.write(bytes_read.decode('ascii')[:-3].encode('ascii'))
+				print('terminado')
 				break
 			print('received bites')
 			f.write(bytes_read)
@@ -98,7 +100,7 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 server.bind((constants.SERVER_ADDRESS, constants.PORT))
 
-server.listen(10)
+server.listen(5)
 
 try:
 	test_db = sys.argv[1]
